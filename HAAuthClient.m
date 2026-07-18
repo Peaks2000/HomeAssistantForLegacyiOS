@@ -1,4 +1,5 @@
 #import "HAAuthClient.h"
+#import "HAURLCompatibility.h"
 
 typedef enum {
     HAAuthStageIdle,
@@ -75,7 +76,7 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
         [self fail:@"Could not create the authentication request."];
         return;
     }
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[self URLForPath:path]];
+    NSMutableURLRequest *request = HAMutableURLRequestWithURL([self URLForPath:path]);
     request.HTTPMethod = @"POST";
     request.HTTPBody = data;
     [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
@@ -86,7 +87,7 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
     self.stage = HAAuthStageExchangeCode;
     NSString *body = [NSString stringWithFormat:@"grant_type=authorization_code&code=%@&client_id=%@",
         [self formEncodedString:code], [self formEncodedString:HAClientID]];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[self URLForPath:@"/auth/token"]];
+    NSMutableURLRequest *request = HAMutableURLRequestWithURL([self URLForPath:@"/auth/token"]);
     request.HTTPMethod = @"POST";
     request.HTTPBody = [body dataUsingEncoding:NSUTF8StringEncoding];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
@@ -96,14 +97,14 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
 - (void)startRequest:(NSURLRequest *)request {
     [self.connection cancel];
     self.responseData = [NSMutableData data];
-    self.connection = [[[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES] autorelease];
+    self.connection = HAStartURLConnection(request, self);
     if (self.connection == nil) {
         [self fail:@"Could not connect to Home Assistant."];
     }
 }
 
 - (NSURL *)URLForPath:(NSString *)path {
-    return [NSURL URLWithString:[self.baseURLString stringByAppendingString:path]];
+    return HAURLWithString([self.baseURLString stringByAppendingString:path]);
 }
 
 - (NSString *)formEncodedString:(NSString *)value {

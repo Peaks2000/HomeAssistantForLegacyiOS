@@ -5,6 +5,7 @@
 #import "HAHomeManager.h"
 #import "HAHomesViewController.h"
 #import "HASettingsViewController.h"
+#import "HAURLCompatibility.h"
 
 @interface HAEntityListViewController () <NSURLConnectionDataDelegate, UISearchBarDelegate,
     HADevicePickerViewControllerDelegate, HAHomesViewControllerDelegate>
@@ -80,12 +81,12 @@
 
 - (void)refresh:(id)sender {
     [self.connection cancel];
-    NSURL *url = [NSURL URLWithString:[self.baseURLString stringByAppendingString:@"/api/states"]];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    NSURL *url = HAURLWithString([self.baseURLString stringByAppendingString:@"/api/states"]);
+    NSMutableURLRequest *request = HAMutableURLRequestWithURL(url);
     [request setValue:[NSString stringWithFormat:@"Bearer %@", self.accessToken]
         forHTTPHeaderField:@"Authorization"];
     self.responseData = [NSMutableData data];
-    self.connection = [[[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES] autorelease];
+    self.connection = HAStartURLConnection(request, self);
     self.navigationItem.rightBarButtonItem.enabled = NO;
 }
 

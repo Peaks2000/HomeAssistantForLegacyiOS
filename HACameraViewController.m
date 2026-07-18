@@ -1,4 +1,5 @@
 #import "HACameraViewController.h"
+#import "HAURLCompatibility.h"
 
 @interface HACameraViewController ()
 @property(nonatomic, retain) NSDictionary *entity;
@@ -70,12 +71,12 @@
     NSString *entityID = [self.entity objectForKey:@"entity_id"];
     NSString *path = [NSString stringWithFormat:@"/api/camera_proxy/%@?time=%.0f", entityID,
         [[NSDate date] timeIntervalSince1970] * 1000.0];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:
-        [NSURL URLWithString:[self.baseURLString stringByAppendingString:path]]];
+    NSMutableURLRequest *request = HAMutableURLRequestWithURL(
+        HAURLWithString([self.baseURLString stringByAppendingString:path]));
     [request setValue:[NSString stringWithFormat:@"Bearer %@", self.accessToken]
         forHTTPHeaderField:@"Authorization"];
     self.imageData = [NSMutableData data];
-    self.connection = [[[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES] autorelease];
+    self.connection = HAStartURLConnection(request, self);
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {

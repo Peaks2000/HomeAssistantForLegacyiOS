@@ -1,5 +1,6 @@
 #import "HAEntityDetailViewController.h"
 #import "HACameraViewController.h"
+#import "HAURLCompatibility.h"
 
 @interface HAEntityDetailViewController () <NSURLConnectionDataDelegate>
 @property(nonatomic, retain) NSDictionary *entity;
@@ -154,8 +155,8 @@
 
 - (void)callService:(NSString *)service domain:(NSString *)domain additionalData:(NSDictionary *)additionalData {
     NSString *path = [NSString stringWithFormat:@"/api/services/%@/%@", domain, service];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:
-        [NSURL URLWithString:[self.baseURLString stringByAppendingString:path]]];
+    NSMutableURLRequest *request = HAMutableURLRequestWithURL(
+        HAURLWithString([self.baseURLString stringByAppendingString:path]));
     request.HTTPMethod = @"POST";
     NSMutableDictionary *body = [NSMutableDictionary dictionaryWithObject:[self.entity objectForKey:@"entity_id"]
                                                                     forKey:@"entity_id"];
@@ -167,7 +168,7 @@
     [request setValue:[NSString stringWithFormat:@"Bearer %@", self.accessToken]
         forHTTPHeaderField:@"Authorization"];
     self.responseData = [NSMutableData data];
-    self.connection = [[[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES] autorelease];
+    self.connection = HAStartURLConnection(request, self);
     self.stateLabel.text = @"Sending command…";
 }
 

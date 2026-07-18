@@ -3,6 +3,7 @@
 #import "HAEntityListViewController.h"
 #import "HAHomeManager.h"
 #import "HAVerificationViewController.h"
+#import "HAURLCompatibility.h"
 
 @interface HASettingsViewController () <HAAuthClientDelegate, HAVerificationViewControllerDelegate>
 @property(nonatomic, retain) UITextField *baseURLField;
@@ -95,7 +96,7 @@
 }
 
 - (void)connect:(id)sender {
-    NSURL *url = [NSURL URLWithString:self.baseURLField.text];
+    NSURL *url = HAURLWithString(self.baseURLField.text);
     if (url == nil || [url scheme] == nil || [url host] == nil) {
         UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:@"Invalid URL"
                                                         message:@"Enter a complete http:// or https:// URL."

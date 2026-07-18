@@ -1,4 +1,5 @@
 #import "HAHomeManager.h"
+#import "HAURLCompatibility.h"
 
 NSString *const HAHomeIdentifierKey = @"identifier";
 NSString *const HAHomeNameKey = @"name";
@@ -23,7 +24,7 @@ static NSString *const HASelectedHomeIdentifierDefaultsKey = @"HASelectedHomeIde
         return;
     }
     NSString *identifier = [[NSProcessInfo processInfo] globallyUniqueString];
-    NSString *name = [[NSURL URLWithString:baseURL] host] ?: @"Home";
+    NSString *name = [HAURLWithString(baseURL) host] ?: @"Home";
     NSDictionary *home = [NSDictionary dictionaryWithObjectsAndKeys:
         identifier, HAHomeIdentifierKey,
         name, HAHomeNameKey,
@@ -75,7 +76,7 @@ static NSString *const HASelectedHomeIdentifierDefaultsKey = @"HASelectedHomeIde
         [savedHome setObject:[[NSProcessInfo processInfo] globallyUniqueString] forKey:HAHomeIdentifierKey];
         [savedHome setObject:[NSArray array] forKey:HAHomeSelectedEntityIDsKey];
     }
-    NSString *displayName = [name length] > 0 ? name : [[NSURL URLWithString:baseURLString] host];
+    NSString *displayName = [name length] > 0 ? name : [HAURLWithString(baseURLString) host];
     [savedHome setObject:displayName ?: @"Home" forKey:HAHomeNameKey];
     [savedHome setObject:baseURLString forKey:HAHomeBaseURLKey];
     [savedHome setObject:accessToken forKey:HAHomeAccessTokenKey];

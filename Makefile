@@ -8,7 +8,7 @@ APPLICATION_NAME = HALegacy
 HALegacy_FILES = main.m HAAppDelegate.m HAAuthClient.m HACameraViewController.m \
 	HADevicePickerViewController.m HAEntityDetailViewController.m HAEntityListViewController.m \
 	HAHomeManager.m HAHomesViewController.m \
-	HASettingsViewController.m HAVerificationViewController.m
+	HASettingsViewController.m HAURLCompatibility.m HAVerificationViewController.m
 HALegacy_FRAMEWORKS = UIKit Foundation
 HALegacy_CFLAGS = -fno-objc-arc -Wall -Wextra -Wno-deprecated-declarations -Wno-objc-method-access
 HALegacy_INSTALL_PATH = /Applications
