@@ -10,6 +10,8 @@ dependencies require iOS 16.4 or newer.
 - Home Assistant frontend in `WKWebView` on iOS 8+ and `UIWebView` on iOS 4-7.
 - Native Home Assistant username/password authentication.
 - Native two-factor code prompt for TOTP and notification MFA.
+- Six-digit verification codes submit automatically when the final digit is entered.
+- Native iPhone 5 launch sizing prevents iOS 6 letterboxing.
 - Native entity list that does not depend on the device web engine.
 - Customizable My Devices view with a contextual + button and swipe-to-delete.
 - Searchable All Devices view without add/remove controls.

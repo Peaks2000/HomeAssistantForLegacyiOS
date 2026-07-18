@@ -5,6 +5,7 @@
 @property(nonatomic, retain) UILabel *messageLabel;
 @property(nonatomic, retain) UITextField *codeField;
 @property(nonatomic, retain) UIButton *verifyButton;
+@property(nonatomic, assign) BOOL submitting;
 @end
 
 
@@ -15,6 +16,7 @@
 @synthesize messageLabel = _messageLabel;
 @synthesize codeField = _codeField;
 @synthesize verifyButton = _verifyButton;
+@synthesize submitting = _submitting;
 
 - (id)initWithMessage:(NSString *)message {
     self = [super init];
@@ -73,10 +75,29 @@
 }
 
 - (void)verify:(id)sender {
-    if ([self.codeField.text length] == 0) {
+    if ([self.codeField.text length] == 0 || self.submitting) {
         return;
     }
+    self.submitting = YES;
+    self.codeField.enabled = NO;
+    self.verifyButton.enabled = NO;
     [self.delegate verificationViewController:self didSubmitCode:self.codeField.text];
+}
+
+- (BOOL)textField:(UITextField *)textField
+    shouldChangeCharactersInRange:(NSRange)range
+                replacementString:(NSString *)string {
+    NSString *updatedCode = [textField.text stringByReplacingCharactersInRange:range withString:string];
+    NSCharacterSet *nonDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+    if ([updatedCode rangeOfCharacterFromSet:nonDigits].location != NSNotFound || [updatedCode length] > 6) {
+        return NO;
+    }
+    if ([updatedCode length] == 6) {
+        textField.text = updatedCode;
+        [self verify:textField];
+        return NO;
+    }
+    return YES;
 }
 
 - (void)cancel:(id)sender {
