@@ -16,6 +16,9 @@ extern NSString *const HAHomeSelectedEntityIDsKey;
                        refreshToken:(NSString *)refreshToken;
 + (void)selectHomeWithIdentifier:(NSString *)identifier;
 + (void)removeHomeWithIdentifier:(NSString *)identifier;
++ (NSString *)accessTokenForBaseURLString:(NSString *)baseURLString;
++ (NSString *)refreshTokenForBaseURLString:(NSString *)baseURLString;
++ (void)updateAccessToken:(NSString *)accessToken forBaseURLString:(NSString *)baseURLString;
 + (NSArray *)selectedEntityIDs;
 + (void)setSelectedEntityIDs:(NSArray *)entityIDs;
 @end

@@ -11,6 +11,7 @@ dependencies require iOS 16.4 or newer.
 - Native Home Assistant username/password authentication.
 - Native two-factor code prompt for TOTP and notification MFA.
 - Six-digit verification codes submit automatically when the final digit is entered.
+- Expired access tokens renew automatically using each home's saved refresh token.
 - Native iPhone 5 launch sizing prevents iOS 6 letterboxing.
 - Native entity list that does not depend on the device web engine.
 - Customizable My Devices view with a contextual + button and swipe-to-delete.

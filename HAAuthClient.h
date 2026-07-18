@@ -12,5 +12,6 @@
 @property(nonatomic, assign) id<HAAuthClientDelegate> delegate;
 - (id)initWithBaseURLString:(NSString *)baseURLString;
 - (void)authenticateUsername:(NSString *)username password:(NSString *)password;
+- (void)refreshAccessTokenWithRefreshToken:(NSString *)refreshToken;
 - (void)submitVerificationCode:(NSString *)code;
 @end

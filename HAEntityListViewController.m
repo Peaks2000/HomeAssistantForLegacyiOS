@@ -1,4 +1,5 @@
 #import "HAEntityListViewController.h"
+#import "HAAuthClient.h"
 #import "HADevicePickerViewController.h"
 #import "HACameraViewController.h"
 #import "HAEntityDetailViewController.h"
@@ -8,7 +9,7 @@
 #import "HAURLCompatibility.h"
 
 @interface HAEntityListViewController () <NSURLConnectionDataDelegate, UISearchBarDelegate,
-    HADevicePickerViewControllerDelegate, HAHomesViewControllerDelegate>
+    HAAuthClientDelegate, HADevicePickerViewControllerDelegate, HAHomesViewControllerDelegate>
 @property(nonatomic, copy) NSString *baseURLString;
 @property(nonatomic, copy) NSString *accessToken;
 @property(nonatomic, retain) NSArray *entities;
@@ -20,7 +21,9 @@
 @property(nonatomic, retain) UINavigationController *homesNavigationController;
 @property(nonatomic, retain) NSMutableData *responseData;
 @property(nonatomic, retain) NSURLConnection *connection;
+@property(nonatomic, retain) HAAuthClient *authClient;
 @property(nonatomic, assign) NSInteger statusCode;
+@property(nonatomic, assign) BOOL retriedAfterTokenRefresh;
 @end
 
 @implementation HAEntityListViewController
@@ -36,7 +39,9 @@
 @synthesize homesNavigationController = _homesNavigationController;
 @synthesize responseData = _responseData;
 @synthesize connection = _connection;
+@synthesize authClient = _authClient;
 @synthesize statusCode = _statusCode;
+@synthesize retriedAfterTokenRefresh = _retriedAfterTokenRefresh;
 
 - (id)initWithBaseURLString:(NSString *)baseURLString accessToken:(NSString *)accessToken {
     self = [super initWithStyle:UITableViewStylePlain];
@@ -81,6 +86,10 @@
 
 - (void)refresh:(id)sender {
     [self.connection cancel];
+    NSString *savedAccessToken = [HAHomeManager accessTokenForBaseURLString:self.baseURLString];
+    if ([savedAccessToken length] > 0) {
+        self.accessToken = savedAccessToken;
+    }
     NSURL *url = HAURLWithString([self.baseURLString stringByAppendingString:@"/api/states"]);
     NSMutableURLRequest *request = HAMutableURLRequestWithURL(url);
     [request setValue:[NSString stringWithFormat:@"Bearer %@", self.accessToken]
@@ -105,7 +114,13 @@
     self.navigationItem.rightBarButtonItem.enabled = YES;
     self.connection = nil;
     if (self.statusCode == 401) {
-        [self showError:@"Your session expired. Sign in again."];
+        self.responseData = nil;
+        if (!self.retriedAfterTokenRefresh) {
+            [self refreshExpiredSession];
+        } else {
+            self.retriedAfterTokenRefresh = NO;
+            [self showError:@"Home Assistant rejected the renewed session. Please sign in again."];
+        }
         return;
     }
     NSError *error = nil;
@@ -118,7 +133,40 @@
     self.allEntities = [response sortedArrayUsingComparator:^NSComparisonResult(id first, id second) {
         return [[self displayNameForEntity:first] localizedCaseInsensitiveCompare:[self displayNameForEntity:second]];
     }];
+    self.retriedAfterTokenRefresh = NO;
     [self updateVisibleEntities];
+}
+
+- (void)refreshExpiredSession {
+    NSString *refreshToken = [HAHomeManager refreshTokenForBaseURLString:self.baseURLString];
+    if ([refreshToken length] == 0) {
+        [self showError:@"Your session expired and cannot be renewed. Please sign in again."];
+        return;
+    }
+    self.retriedAfterTokenRefresh = YES;
+    self.authClient = [[[HAAuthClient alloc] initWithBaseURLString:self.baseURLString] autorelease];
+    self.authClient.delegate = self;
+    [self.authClient refreshAccessTokenWithRefreshToken:refreshToken];
+}
+
+- (void)authClient:(HAAuthClient *)client didAuthenticateWithAccessToken:(NSString *)accessToken {
+    self.accessToken = accessToken;
+    [HAHomeManager updateAccessToken:accessToken forBaseURLString:self.baseURLString];
+    self.authClient.delegate = nil;
+    self.authClient = nil;
+    [self refresh:nil];
+}
+
+- (void)authClient:(HAAuthClient *)client didRequestVerificationCodeWithMessage:(NSString *)message {
+    [self authClient:client didFailWithMessage:@"Home Assistant unexpectedly requested verification while renewing the session."];
+}
+
+- (void)authClient:(HAAuthClient *)client didFailWithMessage:(NSString *)message {
+    self.authClient.delegate = nil;
+    self.authClient = nil;
+    self.retriedAfterTokenRefresh = NO;
+    self.navigationItem.rightBarButtonItem.enabled = YES;
+    [self showError:[NSString stringWithFormat:@"Could not renew the session: %@", message]];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
@@ -340,6 +388,8 @@
 - (void)dealloc {
     [_connection cancel];
     [_connection release];
+    _authClient.delegate = nil;
+    [_authClient release];
     [_responseData release];
     [_entities release];
     [_allEntities release];

@@ -12,9 +12,9 @@ SERVER_DIRECTORY = Path(__file__).resolve().parent
 PACKAGE_DIRECTORY = SERVER_DIRECTORY.parent / "packages"
 INDEX_FILE = SERVER_DIRECTORY / "index.html"
 DOWNLOADS = {
-    "/download/armv7": PACKAGE_DIRECTORY / "org.home-assistant.legacy_0.5.9_ios4-armv7.deb",
-    "/download/arm64": PACKAGE_DIRECTORY / "org.home-assistant.legacy_0.5.9_ios7-arm64.deb",
-    "/download/rootless-arm64": PACKAGE_DIRECTORY / "org.home-assistant.legacy_0.5.9_ios15-rootless-arm64.deb",
+    "/download/armv7": PACKAGE_DIRECTORY / "org.home-assistant.legacy_0.6.0_ios4-armv7.deb",
+    "/download/arm64": PACKAGE_DIRECTORY / "org.home-assistant.legacy_0.6.0_ios7-arm64.deb",
+    "/download/rootless-arm64": PACKAGE_DIRECTORY / "org.home-assistant.legacy_0.6.0_ios15-rootless-arm64.deb",
 }
 
 

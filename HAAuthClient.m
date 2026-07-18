@@ -5,7 +5,8 @@ typedef enum {
     HAAuthStageIdle,
     HAAuthStageCreateFlow,
     HAAuthStageSubmitCredentials,
-    HAAuthStageExchangeCode
+    HAAuthStageExchangeCode,
+    HAAuthStageRefreshToken
 } HAAuthStage;
 
 static NSString *const HAClientID = @"https://home-assistant.io/iOS";
@@ -16,6 +17,7 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
 @property(nonatomic, copy) NSString *username;
 @property(nonatomic, copy) NSString *password;
 @property(nonatomic, copy) NSString *flowID;
+@property(nonatomic, copy) NSString *refreshToken;
 @property(nonatomic, retain) NSURLConnection *connection;
 @property(nonatomic, retain) NSMutableData *responseData;
 @property(nonatomic, assign) NSInteger statusCode;
@@ -29,6 +31,7 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
 @synthesize username = _username;
 @synthesize password = _password;
 @synthesize flowID = _flowID;
+@synthesize refreshToken = _refreshToken;
 @synthesize connection = _connection;
 @synthesize responseData = _responseData;
 @synthesize statusCode = _statusCode;
@@ -67,6 +70,22 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
         HAClientID, @"client_id",
         nil];
     [self startJSONRequestPath:[@"/auth/login_flow/" stringByAppendingString:self.flowID] body:body];
+}
+
+- (void)refreshAccessTokenWithRefreshToken:(NSString *)refreshToken {
+    if ([refreshToken length] == 0) {
+        [self fail:@"No saved refresh token is available. Please sign in again."];
+        return;
+    }
+    self.refreshToken = refreshToken;
+    self.stage = HAAuthStageRefreshToken;
+    NSString *body = [NSString stringWithFormat:@"grant_type=refresh_token&refresh_token=%@&client_id=%@",
+        [self formEncodedString:refreshToken], [self formEncodedString:HAClientID]];
+    NSMutableURLRequest *request = HAMutableURLRequestWithURL([self URLForPath:@"/auth/token"]);
+    request.HTTPMethod = @"POST";
+    request.HTTPBody = [body dataUsingEncoding:NSUTF8StringEncoding];
+    [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
+    [self startRequest:request];
 }
 
 - (void)startJSONRequestPath:(NSString *)path body:(NSDictionary *)body {
@@ -146,7 +165,7 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
         [self handleCreatedFlow:response];
     } else if (self.stage == HAAuthStageSubmitCredentials) {
         [self handleCredentialResult:response];
-    } else if (self.stage == HAAuthStageExchangeCode) {
+    } else if (self.stage == HAAuthStageExchangeCode || self.stage == HAAuthStageRefreshToken) {
         [self handleTokenResult:response];
     }
 }
@@ -200,9 +219,13 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
 }
 
 - (void)handleTokenResult:(NSDictionary *)response {
+    BOOL isRefresh = self.stage == HAAuthStageRefreshToken;
     NSString *accessToken = [response objectForKey:@"access_token"];
     NSString *refreshToken = [response objectForKey:@"refresh_token"];
-    if ([accessToken length] == 0 || [refreshToken length] == 0) {
+    if (isRefresh && [refreshToken length] == 0) {
+        refreshToken = self.refreshToken;
+    }
+    if ([accessToken length] == 0 || (!isRefresh && [refreshToken length] == 0)) {
         [self fail:@"Home Assistant did not return valid tokens."];
         return;
     }
@@ -213,6 +236,7 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
     self.username = nil;
     self.password = nil;
     self.flowID = nil;
+    self.refreshToken = nil;
     self.stage = HAAuthStageIdle;
     [self.delegate authClient:self didAuthenticateWithAccessToken:accessToken];
 }
@@ -227,6 +251,7 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
     self.username = nil;
     self.password = nil;
     self.flowID = nil;
+    self.refreshToken = nil;
     self.stage = HAAuthStageIdle;
     [self.delegate authClient:self didFailWithMessage:message];
 }
@@ -239,6 +264,7 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
     [_username release];
     [_password release];
     [_flowID release];
+    [_refreshToken release];
     [super dealloc];
 }
 

@@ -1,5 +1,6 @@
 #import "HAEntityDetailViewController.h"
 #import "HACameraViewController.h"
+#import "HAHomeManager.h"
 #import "HAURLCompatibility.h"
 
 @interface HAEntityDetailViewController () <NSURLConnectionDataDelegate>
@@ -154,6 +155,10 @@
 }
 
 - (void)callService:(NSString *)service domain:(NSString *)domain additionalData:(NSDictionary *)additionalData {
+    NSString *savedAccessToken = [HAHomeManager accessTokenForBaseURLString:self.baseURLString];
+    if ([savedAccessToken length] > 0) {
+        self.accessToken = savedAccessToken;
+    }
     NSString *path = [NSString stringWithFormat:@"/api/services/%@/%@", domain, service];
     NSMutableURLRequest *request = HAMutableURLRequestWithURL(
         HAURLWithString([self.baseURLString stringByAppendingString:path]));

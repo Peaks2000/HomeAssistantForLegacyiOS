@@ -13,6 +13,13 @@ static NSString *const HASelectedHomeIdentifierDefaultsKey = @"HASelectedHomeIde
 
 @implementation HAHomeManager
 
++ (NSString *)normalizedBaseURLString:(NSString *)baseURLString {
+    while ([baseURLString hasSuffix:@"/"]) {
+        baseURLString = [baseURLString substringToIndex:[baseURLString length] - 1];
+    }
+    return baseURLString;
+}
+
 + (void)migrateLegacyHomeIfNeeded {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if ([[defaults arrayForKey:HAHomesDefaultsKey] count] > 0) {
@@ -59,6 +66,7 @@ static NSString *const HASelectedHomeIdentifierDefaultsKey = @"HASelectedHomeIde
                       baseURLString:(NSString *)baseURLString
                         accessToken:(NSString *)accessToken
                        refreshToken:(NSString *)refreshToken {
+    baseURLString = [self normalizedBaseURLString:baseURLString];
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSMutableArray *homes = [NSMutableArray arrayWithArray:[self homes]];
     NSMutableDictionary *savedHome = nil;
@@ -130,6 +138,50 @@ static NSString *const HASelectedHomeIdentifierDefaultsKey = @"HASelectedHomeIde
             [defaults removeObjectForKey:@"HAFavoriteEntityIDs"];
         }
     }
+    [defaults synchronize];
+}
+
++ (NSDictionary *)homeForBaseURLString:(NSString *)baseURLString {
+    NSString *normalizedBaseURL = [self normalizedBaseURLString:baseURLString];
+    for (NSDictionary *home in [self homes]) {
+        NSString *savedBaseURL = [self normalizedBaseURLString:[home objectForKey:HAHomeBaseURLKey]];
+        if ([savedBaseURL caseInsensitiveCompare:normalizedBaseURL] == NSOrderedSame) {
+            return home;
+        }
+    }
+    return nil;
+}
+
++ (NSString *)accessTokenForBaseURLString:(NSString *)baseURLString {
+    return [[self homeForBaseURLString:baseURLString] objectForKey:HAHomeAccessTokenKey];
+}
+
++ (NSString *)refreshTokenForBaseURLString:(NSString *)baseURLString {
+    return [[self homeForBaseURLString:baseURLString] objectForKey:HAHomeRefreshTokenKey];
+}
+
++ (void)updateAccessToken:(NSString *)accessToken forBaseURLString:(NSString *)baseURLString {
+    if ([accessToken length] == 0 || [baseURLString length] == 0) {
+        return;
+    }
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSMutableArray *homes = [NSMutableArray arrayWithArray:[self homes]];
+    NSString *selectedIdentifier = [defaults stringForKey:HASelectedHomeIdentifierDefaultsKey];
+    NSString *normalizedBaseURL = [self normalizedBaseURLString:baseURLString];
+    for (NSUInteger index = 0; index < [homes count]; index++) {
+        NSDictionary *home = [homes objectAtIndex:index];
+        NSString *savedBaseURL = [self normalizedBaseURLString:[home objectForKey:HAHomeBaseURLKey]];
+        if ([savedBaseURL caseInsensitiveCompare:normalizedBaseURL] == NSOrderedSame) {
+            NSMutableDictionary *updatedHome = [NSMutableDictionary dictionaryWithDictionary:home];
+            [updatedHome setObject:accessToken forKey:HAHomeAccessTokenKey];
+            [homes replaceObjectAtIndex:index withObject:updatedHome];
+            if ([[home objectForKey:HAHomeIdentifierKey] isEqualToString:selectedIdentifier]) {
+                [self mirrorSelectedHome:updatedHome defaults:defaults];
+            }
+            break;
+        }
+    }
+    [defaults setObject:homes forKey:HAHomesDefaultsKey];
     [defaults synchronize];
 }
 

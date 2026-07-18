@@ -1,4 +1,5 @@
 #import "HACameraViewController.h"
+#import "HAHomeManager.h"
 #import "HAURLCompatibility.h"
 
 @interface HACameraViewController ()
@@ -68,6 +69,10 @@
 
 - (void)loadFrame:(NSTimer *)timer {
     if (self.connection != nil) return;
+    NSString *savedAccessToken = [HAHomeManager accessTokenForBaseURLString:self.baseURLString];
+    if ([savedAccessToken length] > 0) {
+        self.accessToken = savedAccessToken;
+    }
     NSString *entityID = [self.entity objectForKey:@"entity_id"];
     NSString *path = [NSString stringWithFormat:@"/api/camera_proxy/%@?time=%.0f", entityID,
         [[NSDate date] timeIntervalSince1970] * 1000.0];
