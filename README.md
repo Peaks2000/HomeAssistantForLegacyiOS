@@ -16,6 +16,7 @@ dependencies require iOS 16.4 or newer.
 - Native entity list that does not depend on the device web engine.
 - Customizable My Devices view with a contextual + button and swipe-to-delete.
 - Searchable All Devices view without add/remove controls.
+- Compact native My Devices / All Devices selector that fits older navigation bars.
 - Searchable Add Devices sheet, centered on iPad and sliding up on iPhone.
 - Add Devices rows use a + control, and cameras open directly into their feed.
 - Multiple saved homes with a native home switcher and last-used-home launch behavior.
