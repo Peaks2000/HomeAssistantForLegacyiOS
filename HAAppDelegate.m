@@ -1,5 +1,6 @@
 #import "HAAppDelegate.h"
 #import "HAEntityListViewController.h"
+#import "HAHomeManager.h"
 #import "HASettingsViewController.h"
 
 @implementation HAAppDelegate
@@ -9,8 +10,9 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     self.window = [[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
-    NSString *baseURL = [[NSUserDefaults standardUserDefaults] stringForKey:@"HABaseURL"];
-    NSString *accessToken = [[NSUserDefaults standardUserDefaults] stringForKey:@"HAAccessToken"];
+    NSDictionary *selectedHome = [HAHomeManager selectedHome];
+    NSString *baseURL = [selectedHome objectForKey:HAHomeBaseURLKey];
+    NSString *accessToken = [selectedHome objectForKey:HAHomeAccessTokenKey];
     UIViewController *root = nil;
     if ([baseURL length] > 0 && [accessToken length] > 0) {
         root = [[[HAEntityListViewController alloc] initWithBaseURLString:baseURL

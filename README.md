@@ -15,6 +15,8 @@ dependencies require iOS 16.4 or newer.
 - Searchable All Devices view without add/remove controls.
 - Searchable Add Devices sheet, centered on iPad and sliding up on iPhone.
 - Add Devices rows use a + control, and cameras open directly into their feed.
+- Multiple saved homes with a native home switcher and last-used-home launch behavior.
+- Standard UIKit controls retain each installed iOS version's native appearance.
 - Native light, switch, cover, lock, scene, script, button and automation controls.
 - Brightness and RGB color presets for compatible lights.
 - Authenticated, continuously refreshed CCTV camera viewer.

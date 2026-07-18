@@ -1,40 +1,57 @@
 #import "HASettingsViewController.h"
 #import "HAAuthClient.h"
 #import "HAEntityListViewController.h"
+#import "HAHomeManager.h"
 #import "HAVerificationViewController.h"
 
 @interface HASettingsViewController () <HAAuthClientDelegate, HAVerificationViewControllerDelegate>
 @property(nonatomic, retain) UITextField *baseURLField;
+@property(nonatomic, retain) UITextField *homeNameField;
 @property(nonatomic, retain) UITextField *usernameField;
 @property(nonatomic, retain) UITextField *passwordField;
 @property(nonatomic, retain) UIButton *connectButton;
 @property(nonatomic, retain) UILabel *statusLabel;
 @property(nonatomic, retain) HAAuthClient *authClient;
 @property(nonatomic, retain) UINavigationController *verificationNavigationController;
+@property(nonatomic, assign) BOOL addingHome;
 @end
 
 
 @implementation HASettingsViewController
 
+@synthesize delegate = _delegate;
 @synthesize baseURLField = _baseURLField;
+@synthesize homeNameField = _homeNameField;
 @synthesize usernameField = _usernameField;
 @synthesize passwordField = _passwordField;
 @synthesize connectButton = _connectButton;
 @synthesize statusLabel = _statusLabel;
 @synthesize authClient = _authClient;
 @synthesize verificationNavigationController = _verificationNavigationController;
+@synthesize addingHome = _addingHome;
+
+- (id)initForAddingHome {
+    self = [super init];
+    if (self) {
+        self.addingHome = YES;
+    }
+    return self;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.title = @"Home Assistant";
+    self.title = self.addingHome ? @"Add Home" : @"Home Assistant";
     self.view.backgroundColor = [UIColor whiteColor];
 
+    self.homeNameField = [self fieldWithFrame:CGRectZero placeholder:@"Home name"];
     self.baseURLField = [self fieldWithFrame:CGRectZero placeholder:@"https://home.example.com"];
     self.usernameField = [self fieldWithFrame:CGRectZero placeholder:@"Username"];
     self.passwordField = [self fieldWithFrame:CGRectZero placeholder:@"Password"];
     self.passwordField.secureTextEntry = YES;
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    self.baseURLField.text = [defaults stringForKey:@"HABaseURL"];
+    if (!self.addingHome) {
+        self.baseURLField.text = [[NSUserDefaults standardUserDefaults] stringForKey:@"HABaseURL"];
+    }
+    [self.view addSubview:self.homeNameField];
     [self.view addSubview:self.baseURLField];
     [self.view addSubview:self.usernameField];
     [self.view addSubview:self.passwordField];
@@ -58,12 +75,13 @@
     CGFloat horizontalMargin = 24.0;
     CGFloat width = MIN(self.view.bounds.size.width - horizontalMargin * 2.0, maximumWidth);
     CGFloat left = floor((self.view.bounds.size.width - width) / 2.0);
-    CGFloat top = MAX(32.0, floor((self.view.bounds.size.height - 260.0) / 3.0));
-    self.baseURLField.frame = CGRectMake(left, top, width, 42.0);
-    self.usernameField.frame = CGRectMake(left, top + 52.0, width, 42.0);
-    self.passwordField.frame = CGRectMake(left, top + 104.0, width, 42.0);
-    self.connectButton.frame = CGRectMake(left, top + 160.0, width, 48.0);
-    self.statusLabel.frame = CGRectMake(left, top + 216.0, width, 44.0);
+    CGFloat top = MAX(24.0, floor((self.view.bounds.size.height - 312.0) / 3.0));
+    self.homeNameField.frame = CGRectMake(left, top, width, 42.0);
+    self.baseURLField.frame = CGRectMake(left, top + 52.0, width, 42.0);
+    self.usernameField.frame = CGRectMake(left, top + 104.0, width, 42.0);
+    self.passwordField.frame = CGRectMake(left, top + 156.0, width, 42.0);
+    self.connectButton.frame = CGRectMake(left, top + 212.0, width, 48.0);
+    self.statusLabel.frame = CGRectMake(left, top + 268.0, width, 44.0);
 }
 
 - (UITextField *)fieldWithFrame:(CGRect)frame placeholder:(NSString *)placeholder {
@@ -110,9 +128,18 @@
     self.connectButton.enabled = YES;
     self.statusLabel.textColor = [UIColor colorWithRed:0.0 green:0.5 blue:0.1 alpha:1.0];
     self.statusLabel.text = @"Signed in successfully.";
-    HAEntityListViewController *controller = [[[HAEntityListViewController alloc]
-        initWithBaseURLString:self.baseURLField.text accessToken:accessToken] autorelease];
-    [self.navigationController setViewControllers:[NSArray arrayWithObject:controller] animated:YES];
+    NSDictionary *home = [HAHomeManager saveHomeWithName:self.homeNameField.text
+                                           baseURLString:self.baseURLField.text
+                                             accessToken:accessToken
+                                            refreshToken:[[NSUserDefaults standardUserDefaults]
+                                                stringForKey:@"HARefreshToken"]];
+    if (self.addingHome) {
+        [self.delegate settingsViewController:self didAddHome:home];
+    } else {
+        HAEntityListViewController *controller = [[[HAEntityListViewController alloc]
+            initWithBaseURLString:self.baseURLField.text accessToken:accessToken] autorelease];
+        [self.navigationController setViewControllers:[NSArray arrayWithObject:controller] animated:YES];
+    }
 }
 
 - (void)authClient:(HAAuthClient *)client didRequestVerificationCodeWithMessage:(NSString *)message {
@@ -155,6 +182,7 @@
 }
 
 - (void)dealloc {
+    [_homeNameField release];
     [_baseURLField release];
     [_usernameField release];
     [_passwordField release];

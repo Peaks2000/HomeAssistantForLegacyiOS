@@ -2,10 +2,12 @@
 #import "HADevicePickerViewController.h"
 #import "HACameraViewController.h"
 #import "HAEntityDetailViewController.h"
+#import "HAHomeManager.h"
+#import "HAHomesViewController.h"
 #import "HASettingsViewController.h"
 
 @interface HAEntityListViewController () <NSURLConnectionDataDelegate, UISearchBarDelegate,
-    HADevicePickerViewControllerDelegate>
+    HADevicePickerViewControllerDelegate, HAHomesViewControllerDelegate>
 @property(nonatomic, copy) NSString *baseURLString;
 @property(nonatomic, copy) NSString *accessToken;
 @property(nonatomic, retain) NSArray *entities;
@@ -14,6 +16,7 @@
 @property(nonatomic, retain) UISearchBar *searchBar;
 @property(nonatomic, copy) NSString *searchText;
 @property(nonatomic, retain) UINavigationController *devicePickerNavigationController;
+@property(nonatomic, retain) UINavigationController *homesNavigationController;
 @property(nonatomic, retain) NSMutableData *responseData;
 @property(nonatomic, retain) NSURLConnection *connection;
 @property(nonatomic, assign) NSInteger statusCode;
@@ -29,6 +32,7 @@
 @synthesize searchBar = _searchBar;
 @synthesize searchText = _searchText;
 @synthesize devicePickerNavigationController = _devicePickerNavigationController;
+@synthesize homesNavigationController = _homesNavigationController;
 @synthesize responseData = _responseData;
 @synthesize connection = _connection;
 @synthesize statusCode = _statusCode;
@@ -57,10 +61,10 @@
         forControlEvents:UIControlEventValueChanged];
     self.navigationItem.titleView = self.viewSelector;
     self.navigationItem.leftBarButtonItem = [[[UIBarButtonItem alloc]
-        initWithTitle:@"Sign Out"
+        initWithTitle:@"⌂"
                 style:UIBarButtonItemStylePlain
                target:self
-               action:@selector(signOut:)] autorelease];
+               action:@selector(showHomes:)] autorelease];
     [self updateNavigationButton];
     self.searchBar = [[[UISearchBar alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 44)] autorelease];
     self.searchBar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -164,12 +168,9 @@
         return;
     }
     NSString *entityID = [[self.entities objectAtIndex:indexPath.row] objectForKey:@"entity_id"];
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSMutableArray *selectedIDs = [NSMutableArray arrayWithArray:
-        [defaults arrayForKey:@"HAFavoriteEntityIDs"] ?: [NSArray array]];
+    NSMutableArray *selectedIDs = [NSMutableArray arrayWithArray:[HAHomeManager selectedEntityIDs]];
     [selectedIDs removeObject:entityID];
-    [defaults setObject:selectedIDs forKey:@"HAFavoriteEntityIDs"];
-    [defaults synchronize];
+    [HAHomeManager setSelectedEntityIDs:selectedIDs];
     [self updateVisibleEntities];
 }
 
@@ -199,7 +200,7 @@
 }
 
 - (void)addDevice:(id)sender {
-    NSArray *favorites = [[NSUserDefaults standardUserDefaults] arrayForKey:@"HAFavoriteEntityIDs"];
+    NSArray *favorites = [HAHomeManager selectedEntityIDs];
     NSMutableArray *available = [NSMutableArray array];
     for (NSDictionary *entity in self.allEntities) {
         if (![favorites containsObject:[entity objectForKey:@"entity_id"]]) {
@@ -221,13 +222,10 @@
 }
 
 - (void)devicePicker:(HADevicePickerViewController *)picker didAddEntityID:(NSString *)entityID {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSMutableArray *favorites = [NSMutableArray arrayWithArray:[defaults arrayForKey:@"HAFavoriteEntityIDs"]
-        ?: [NSArray array]];
+    NSMutableArray *favorites = [NSMutableArray arrayWithArray:[HAHomeManager selectedEntityIDs]];
     if (![favorites containsObject:entityID]) {
         [favorites addObject:entityID];
-        [defaults setObject:favorites forKey:@"HAFavoriteEntityIDs"];
-        [defaults synchronize];
+        [HAHomeManager setSelectedEntityIDs:favorites];
     }
     [self dismissViewControllerAnimated:YES completion:nil];
     self.devicePickerNavigationController = nil;
@@ -280,7 +278,7 @@
             self.entities = matches;
         }
     } else {
-        NSArray *favorites = [[NSUserDefaults standardUserDefaults] arrayForKey:@"HAFavoriteEntityIDs"];
+        NSArray *favorites = [HAHomeManager selectedEntityIDs];
         NSMutableArray *selected = [NSMutableArray array];
         for (NSDictionary *entity in self.allEntities) {
             if ([favorites containsObject:[entity objectForKey:@"entity_id"]]) {
@@ -298,13 +296,35 @@
     return [friendlyName length] > 0 ? friendlyName : [entity objectForKey:@"entity_id"];
 }
 
-- (void)signOut:(id)sender {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults removeObjectForKey:@"HAAccessToken"];
-    [defaults removeObjectForKey:@"HARefreshToken"];
-    [defaults synchronize];
-    HASettingsViewController *settings = [[[HASettingsViewController alloc] init] autorelease];
-    [self.navigationController setViewControllers:[NSArray arrayWithObject:settings] animated:YES];
+- (void)showHomes:(id)sender {
+    HAHomesViewController *homes = [[[HAHomesViewController alloc] initWithStyle:UITableViewStyleGrouped]
+        autorelease];
+    homes.delegate = self;
+    self.homesNavigationController = [[[UINavigationController alloc]
+        initWithRootViewController:homes] autorelease];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        self.homesNavigationController.modalPresentationStyle = UIModalPresentationFormSheet;
+    } else {
+        self.homesNavigationController.modalPresentationStyle = UIModalPresentationPageSheet;
+    }
+    [self presentViewController:self.homesNavigationController animated:YES completion:nil];
+}
+
+- (void)homesViewControllerDidChooseHome:(NSDictionary *)home {
+    [self dismissViewControllerAnimated:YES completion:nil];
+    HAHomesViewController *homes = (HAHomesViewController *)
+        [[self.homesNavigationController viewControllers] objectAtIndex:0];
+    homes.delegate = nil;
+    self.homesNavigationController = nil;
+    UIViewController *controller = nil;
+    if (home == nil) {
+        controller = [[[HASettingsViewController alloc] init] autorelease];
+    } else {
+        controller = [[[HAEntityListViewController alloc]
+            initWithBaseURLString:[home objectForKey:HAHomeBaseURLKey]
+                      accessToken:[home objectForKey:HAHomeAccessTokenKey]] autorelease];
+    }
+    [self.navigationController setViewControllers:[NSArray arrayWithObject:controller] animated:NO];
 }
 
 - (void)showError:(NSString *)message {
@@ -330,6 +350,10 @@
         (HADevicePickerViewController *)[_devicePickerNavigationController topViewController];
     picker.delegate = nil;
     [_devicePickerNavigationController release];
+    HAHomesViewController *homes = (HAHomesViewController *)
+        [[_homesNavigationController viewControllers] objectAtIndex:0];
+    homes.delegate = nil;
+    [_homesNavigationController release];
     [_baseURLString release];
     [_accessToken release];
     [super dealloc];
