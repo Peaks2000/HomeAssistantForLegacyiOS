@@ -58,6 +58,14 @@ by contemporary Theos.
 
 Install the generated `.deb` through Sileo, Zebra, Cydia, or `dpkg -i` over SSH.
 
+## Unjailbroken device IPAs
+
+The release also includes separate unsigned/resignable IPA files for 32-bit armv7
+and 64-bit arm64 devices. Install the matching IPA with a sideloading tool that
+signs it using your Apple account. A free Apple Personal Team profile expires
+after seven days, so the app must then be signed and installed again. These IPAs
+do not bypass Apple's code-signing or provisioning requirements.
+
 ## Configure
 
 On first launch enter:
