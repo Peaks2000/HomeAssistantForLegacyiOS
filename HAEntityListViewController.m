@@ -64,8 +64,8 @@
         [NSArray arrayWithObjects:@"My Devices", @"All Devices", nil]] autorelease];
     [self.viewSelector sizeToFit];
     CGRect selectorFrame = self.viewSelector.frame;
-    selectorFrame.size.width = MIN(selectorFrame.size.width, 220.0);
-    selectorFrame.size.height = MIN(selectorFrame.size.height, 30.0);
+    selectorFrame.size.width = MIN(selectorFrame.size.width, 205.0);
+    selectorFrame.size.height = MIN(selectorFrame.size.height, 27.0);
     self.viewSelector.frame = selectorFrame;
     self.viewSelector.selectedSegmentIndex = 0;
     [self.viewSelector addTarget:self action:@selector(viewSelectionChanged:)
