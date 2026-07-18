@@ -17,6 +17,7 @@ dependencies require iOS 16.4 or newer.
 - Add Devices rows use a + control, and cameras open directly into their feed.
 - Multiple saved homes with a native home switcher and last-used-home launch behavior.
 - Standard UIKit controls retain each installed iOS version's native appearance.
+- Separate legacy and modern SDK builds let UIKit provide era-correct system styling without runtime version checks.
 - Native light, switch, cover, lock, scene, script, button and automation controls.
 - Brightness and RGB color presets for compatible lights.
 - Authenticated, continuously refreshed CCTV camera viewer.
@@ -40,10 +41,10 @@ Install Theos, then build one package per ABI/OS family:
 
 ```sh
 cd Legacy
-make clean package ARCHS=armv7 TARGET=iphone:clang:latest:4.0
-make clean package ARCHS=arm64 TARGET=iphone:clang:latest:7.0
+make clean package ARCHS=armv7 TARGET=iphone:clang:9.3:4.0
+make clean package ARCHS=arm64 TARGET=iphone:clang:16.5:7.0
 # Dopamine/rootless jailbreaks:
-make clean package THEOS_PACKAGE_SCHEME=rootless ARCHS=arm64 TARGET=iphone:clang:latest:7.0
+make clean package THEOS_PACKAGE_SCHEME=rootless ARCHS=arm64 TARGET=iphone:clang:16.5:15.0
 ```
 
 The first package covers armv7 devices where the available SDK/toolchain can

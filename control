@@ -1,6 +1,6 @@
 Package: org.home-assistant.legacy
 Name: Home Assistant Legacy
-Version: 0.5.6
+Version: 0.5.7
 Architecture: iphoneos-arm
 Description: Home Assistant companion shell for legacy jailbroken iOS devices
 Maintainer: Home Assistant Legacy contributors

@@ -1,4 +1,4 @@
-TARGET ?= iphone:clang:latest:4.0
+TARGET ?= iphone:clang:9.3:4.0
 ARCHS ?= armv7
 
 include $(THEOS)/makefiles/common.mk
@@ -10,7 +10,7 @@ HALegacy_FILES = main.m HAAppDelegate.m HAAuthClient.m HACameraViewController.m 
 	HAHomeManager.m HAHomesViewController.m \
 	HASettingsViewController.m HAVerificationViewController.m
 HALegacy_FRAMEWORKS = UIKit Foundation
-HALegacy_CFLAGS = -fno-objc-arc -Wall -Wextra
+HALegacy_CFLAGS = -fno-objc-arc -Wall -Wextra -Wno-deprecated-declarations -Wno-objc-method-access
 HALegacy_INSTALL_PATH = /Applications
 HALegacy_RESOURCE_DIRS = Resources
 

@@ -118,8 +118,8 @@ static NSString *const HARedirectURI = @"homeassistant://auth-callback";
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     [self.responseData setLength:0];
-    self.statusCode = [response isKindOfClass:[NSHTTPURLResponse class]]
-        ? [(NSHTTPURLResponse *)response statusCode]
+    self.statusCode = [response respondsToSelector:@selector(statusCode)]
+        ? [(id)response statusCode]
         : 0;
 }
 

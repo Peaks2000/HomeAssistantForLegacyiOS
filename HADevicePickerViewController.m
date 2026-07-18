@@ -18,7 +18,7 @@
     if (self) {
         self.allEntities = entities;
         self.visibleEntities = entities;
-        self.preferredContentSize = CGSizeMake(540.0, 620.0);
+        self.contentSizeForViewInPopover = CGSizeMake(540.0, 620.0);
     }
     return self;
 }
