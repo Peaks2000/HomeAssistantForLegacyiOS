@@ -2,6 +2,7 @@
 #import "HAEntityListViewController.h"
 #import "HAHomeManager.h"
 #import "HASettingsViewController.h"
+#import "HAWatchManager.h"
 
 @implementation HAAppDelegate
 
@@ -23,6 +24,7 @@
     self.navigationController = [[[UINavigationController alloc] initWithRootViewController:root] autorelease];
     self.window.rootViewController = self.navigationController;
     [self.window makeKeyAndVisible];
+    [[HAWatchManager sharedManager] start];
 
     return YES;
 }

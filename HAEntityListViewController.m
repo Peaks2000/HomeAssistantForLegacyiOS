@@ -7,6 +7,7 @@
 #import "HAHomesViewController.h"
 #import "HASettingsViewController.h"
 #import "HAURLCompatibility.h"
+#import "HAWatchManager.h"
 
 @interface HAEntityListViewController () <NSURLConnectionDataDelegate, UISearchBarDelegate,
     HAAuthClientDelegate, HADevicePickerViewControllerDelegate, HAHomesViewControllerDelegate>
@@ -64,8 +65,8 @@
         [NSArray arrayWithObjects:@"My Devices", @"All Devices", nil]] autorelease];
     [self.viewSelector sizeToFit];
     CGRect selectorFrame = self.viewSelector.frame;
-    selectorFrame.size.width = MIN(selectorFrame.size.width, 205.0);
-    selectorFrame.size.height = MIN(selectorFrame.size.height, 27.0);
+    selectorFrame.size.width = MIN(selectorFrame.size.width, 190.0);
+    selectorFrame.size.height = MIN(selectorFrame.size.height, 25.0);
     self.viewSelector.frame = selectorFrame;
     self.viewSelector.selectedSegmentIndex = 0;
     [self.viewSelector addTarget:self action:@selector(viewSelectionChanged:)
@@ -138,6 +139,7 @@
     self.allEntities = [response sortedArrayUsingComparator:^NSComparisonResult(id first, id second) {
         return [[self displayNameForEntity:first] localizedCaseInsensitiveCompare:[self displayNameForEntity:second]];
     }];
+    [[HAWatchManager sharedManager] updateEntities:self.allEntities];
     self.retriedAfterTokenRefresh = NO;
     [self updateVisibleEntities];
 }
@@ -225,6 +227,7 @@
     NSMutableArray *selectedIDs = [NSMutableArray arrayWithArray:[HAHomeManager selectedEntityIDs]];
     [selectedIDs removeObject:entityID];
     [HAHomeManager setSelectedEntityIDs:selectedIDs];
+    [[HAWatchManager sharedManager] syncCurrentContext];
     [self updateVisibleEntities];
 }
 
@@ -280,6 +283,7 @@
     if (![favorites containsObject:entityID]) {
         [favorites addObject:entityID];
         [HAHomeManager setSelectedEntityIDs:favorites];
+        [[HAWatchManager sharedManager] syncCurrentContext];
     }
     [self dismissViewControllerAnimated:YES completion:nil];
     self.devicePickerNavigationController = nil;

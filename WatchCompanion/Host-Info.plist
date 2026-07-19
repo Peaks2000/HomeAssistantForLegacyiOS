@@ -5,13 +5,13 @@
     <key>CFBundleDisplayName</key>
     <string>Home Assistant</string>
     <key>CFBundleExecutable</key>
-    <string>HALegacy</string>
+    <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
-    <string>org.home-assistant.legacy</string>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>HALegacy</string>
+    <string>$(PRODUCT_NAME)</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -20,17 +20,11 @@
     <string>1</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
-    <key>MinimumOSVersion</key>
-    <string>4.0</string>
     <key>NSAppTransportSecurity</key>
     <dict>
-        <key>NSAllowsArbitraryLoadsInWebContent</key>
+        <key>NSAllowsArbitraryLoads</key>
         <true/>
     </dict>
-    <key>UIRequiredDeviceCapabilities</key>
-    <array>
-        <string>armv7</string>
-    </array>
     <key>UIDeviceFamily</key>
     <array>
         <integer>1</integer>

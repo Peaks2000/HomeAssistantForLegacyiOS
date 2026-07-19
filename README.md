@@ -26,6 +26,9 @@ dependencies require iOS 16.4 or newer.
 - Brightness and RGB color presets for compatible lights.
 - Authenticated, continuously refreshed CCTV camera viewer.
 - Responsive iPhone and iPad layouts.
+- Apple Watch companion source with My Devices, All Devices, search, state display,
+  and native controls for lights, switches, locks, covers, scenes, scripts,
+  automations, and buttons.
 
 ## Important limits
 
@@ -57,6 +60,34 @@ armv6 hardware requires an archived armv6-capable toolchain and is not supported
 by contemporary Theos.
 
 Install the generated `.deb` through Sileo, Zebra, Cydia, or `dpkg -i` over SSH.
+
+## Apple Watch companion
+
+The watch companion targets watchOS 8 or newer. It receives the selected home,
+selected device IDs, and sanitized entity states over WatchConnectivity. Home
+Assistant access and refresh tokens stay on the iPhone; watch actions are sent
+back to the phone, which performs the authenticated service request.
+
+Building a Watch app requires macOS, Xcode with the watchOS SDK, and Apple code
+signing. On a Mac, install XcodeGen and run:
+
+```sh
+brew install xcodegen
+./build-watch-app.sh
+```
+
+That command performs an unsigned compile, so checking the source does not
+require Apple Developer Program membership. To also create a signed device
+archive, use your free or paid Apple team ID:
+
+```sh
+DEVELOPMENT_TEAM=YOUR_TEAM_ID ./build-watch-app.sh
+```
+
+The generated Xcode project contains the modern iPhone host, the watchOS app,
+and watch model tests. Open it in Xcode to run the companion on a paired iPhone
+and Apple Watch. A free Personal Team can be used for development installation,
+but its provisioning expires and does not provide App Store distribution.
 
 ## Unjailbroken device IPAs
 

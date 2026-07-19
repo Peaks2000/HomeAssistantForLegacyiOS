@@ -1,0 +1,69 @@
+name: HomeAssistantLegacyWatch
+options:
+  deploymentTarget:
+    iOS: "9.0"
+    watchOS: "8.0"
+settings:
+  base:
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 0.7.0
+    CODE_SIGN_STYLE: Automatic
+targets:
+  HALegacyHost:
+    type: application
+    platform: iOS
+    sources:
+      - path: ..
+        includes:
+          - "*.h"
+          - "*.m"
+      - path: ../Resources
+        excludes:
+          - Info.plist
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.home-assistant.legacy
+        INFOPLIST_FILE: Host-Info.plist
+        CLANG_ENABLE_OBJC_ARC: NO
+        OTHER_LDFLAGS:
+          - "$(inherited)"
+          - -weak_framework
+          - WatchConnectivity
+    dependencies:
+      - target: HALegacyWatch
+        embed: true
+  HALegacyWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: Sources
+      - path: Resources
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.home-assistant.legacy.watchapp
+        INFOPLIST_FILE: Watch-Info.plist
+        SWIFT_VERSION: 5.0
+        ASSETCATALOG_COMPILER_APPICON_NAME: WatchIcon
+  HALegacyWatchTests:
+    type: bundle.unit-test
+    platform: watchOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: HALegacyWatch
+schemes:
+  HomeAssistantLegacyWatch:
+    build:
+      targets:
+        HALegacyHost: all
+        HALegacyWatch: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - HALegacyWatchTests
+    archive:
+      config: Release
