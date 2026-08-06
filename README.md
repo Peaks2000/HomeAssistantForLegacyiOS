@@ -89,13 +89,7 @@ and watch model tests. Open it in Xcode to run the companion on a paired iPhone
 and Apple Watch. A free Personal Team can be used for development installation,
 but its provisioning expires and does not provide App Store distribution.
 
-## Unjailbroken device IPAs
-
-The release also includes separate unsigned/resignable IPA files for 32-bit armv7
-and 64-bit arm64 devices. Install the matching IPA with a sideloading tool that
-signs it using your Apple account. A free Apple Personal Team profile expires
-after seven days, so the app must then be signed and installed again. These IPAs
-do not bypass Apple's code-signing or provisioning requirements.
+## Unjailbroken device IPAs suck do not attempt
 
 ## Configure
 
